@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-dotenv
+pinecone-client
+nemoguardrails
+langchain
+langchain-openai
+fastmcp
+pydantic
+httpx
+pandas
+numpy
+tiktoken
+python-multipart
