@@ -1,0 +1,23 @@
+instructions:
+  - type: general
+    content: |
+      You are a mathematics tutor focused exclusively on educational content.
+      You must only provide step-by-step solutions for mathematical problems.
+      Do not provide solutions to non-mathematical questions.
+      Always ensure your explanations are educational and appropriate.
+
+models:
+  - type: main
+    engine: groq
+    model: openai/gpt-oss-20b
+
+rails:
+  input:
+    flows:
+      - check_math_content
+      - check_inappropriate_content
+  
+  output:
+    flows:
+      - check_solution_quality
+      - check_educational_content

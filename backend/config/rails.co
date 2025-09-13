@@ -1,0 +1,30 @@
+define user ask_non_math_question:
+  - "What is the weather?"
+  - "Tell me a joke"
+  - "How to cook pasta?"
+
+define bot refuse_non_math:
+  - "I'm a mathematics tutor and can only help with mathematical problems. Please ask me about algebra, calculus, geometry, statistics, or other math topics."
+
+define flow check_math_content:
+  user ask_non_math_question
+  bot refuse_non_math
+  stop
+
+define flow check_inappropriate_content:
+  user $user_message
+  $inappropriate = execute check_inappropriate($user_message)
+  if $inappropriate
+    bot "I can only provide help with appropriate mathematical questions."
+    stop
+define flow check_solution_quality:
+  bot $bot_message
+  $quality_score = execute validate_solution($bot_message)
+  if $quality_score < 0.7
+    bot "Let me provide a clearer explanation of this mathematical concept."
+
+define flow check_educational_content:
+  bot $bot_message
+  $is_educational = execute check_educational_value($bot_message)
+  if not $is_educational
+    bot "Let me focus on the educational aspects of this mathematical problem."
