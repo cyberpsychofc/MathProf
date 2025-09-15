@@ -6,10 +6,13 @@ pinecone
 nemoguardrails
 langchain
 langchain-groq
+langgraph
 groq
+dspy
 pydantic
 httpx
 pandas
+scikit-learn
 numpy
 tiktoken
 python-multipart

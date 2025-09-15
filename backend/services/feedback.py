@@ -7,11 +7,34 @@ from services.knowledge_base import PineconeKnowledgeBase
 
 logger = logging.getLogger(__name__)
 
+
+
 class FeedbackService:
     def __init__(self):
         self.kb = PineconeKnowledgeBase()
         self.feedback_file = "data/feedback_log.json"
         self._ensure_feedback_file()
+
+    async def load_partial_state(self, feedback_id: str) -> Optional[Dict]:
+        try:
+            with open(self.feedback_file, 'r') as f:
+                feedback_log = json.load(f)
+            for entry in feedback_log:
+                if entry.get('feedback_id') == feedback_id:
+
+                    if entry.get('comments', '').startswith('Paused for human review'):
+                        return entry.get('original_response', {})
+
+                    logger.warning(f"Using non-HITL entry for {feedback_id} as fallback")
+                    return entry.get('original_response', {})
+            logger.warning(f"No entry found for feedback_id: {feedback_id}")
+            return None
+        except FileNotFoundError:
+            logger.error(f"Feedback log missing: {self.feedback_file}")
+            return None
+        except Exception as e:
+            logger.error(f"Load partial state error: {e}")
+            return None
     
     def _ensure_feedback_file(self):
         """Create feedback log file if it doesn't exist"""
@@ -147,11 +170,14 @@ class FeedbackService:
             if groq_feedback:
                 groq_ratings = [f.get('rating', 3) for f in groq_feedback]
                 groq_avg_rating = sum(groq_ratings) / len(groq_ratings)
-            
+
+            hitl_count = len([f for f in feedback_log if 'Paused for human review' in f.get('comments', '')])
+
             return {
                 'total_feedback': total_feedback,
                 'average_rating': round(avg_rating, 2),
                 'groq_average_rating': round(groq_avg_rating, 2),
+                'hitl_count': hitl_count,
                 'source_breakdown': source_counts,
                 'recent_feedback': feedback_log[-5:] if total_feedback >= 5 else feedback_log
             }

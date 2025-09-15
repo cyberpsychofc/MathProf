@@ -13,7 +13,6 @@ class TavilyWebSearchService:
         self.executor = ThreadPoolExecutor(max_workers=3)
     
     async def search_math_problem(self, query: str, max_results: int = 5) -> Dict:
-        """Search for math problem solutions using Tavily"""
         try:
             formatted_query = f"how to solve step by step: {query} mathematics"
             
@@ -44,7 +43,6 @@ class TavilyWebSearchService:
             }
     
     def _tavily_search(self, query: str, max_results: int) -> Dict:
-        """Synchronous Tavily search call"""
         return self.client.search(
             query=query,
             search_depth="advanced",
@@ -56,7 +54,6 @@ class TavilyWebSearchService:
         )
     
     async def _process_search_results(self, search_results: Dict, original_query: str) -> List[Dict]:
-        """Process and extract mathematical content from search results"""
         processed_results = []
         
         for result in search_results.get('results', []):
@@ -87,7 +84,6 @@ class TavilyWebSearchService:
         return processed_results[:3]
     
     def _is_math_content(self, title: str, content: str) -> bool:
-        """Check if content is mathematical"""
         math_keywords = [
             'solve', 'equation', 'formula', 'calculate', 'step by step',
             'algebra', 'calculus', 'geometry', 'trigonometry', 'statistics',
@@ -98,7 +94,6 @@ class TavilyWebSearchService:
         return any(keyword in combined_text for keyword in math_keywords)
     
     async def _extract_solution_steps(self, content: str) -> List[str]:
-        """Extract step-by-step solution from web content"""
         try:
             sentences = content.split('.')
             steps = []

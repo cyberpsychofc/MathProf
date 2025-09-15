@@ -34,6 +34,8 @@ app.add_middleware(
 math_router = MathRoutingService()
 feedback_service = FeedbackService()
 
+
+# Response Models
 class MathQuery(BaseModel):
     question: str
     difficulty_level: Optional[str] = "intermediate"
@@ -47,6 +49,12 @@ class MathResponse(BaseModel):
     confidence: float
     feedback_id: str
     metadata: Optional[dict] = None
+    status: Optional[str] = None  # e.g., "paused_for_review"
+    needs_review: bool = False
+
+class ResumeRequest(BaseModel):
+    feedback_id: str
+    human_input: str
 
 class FeedbackRequest(BaseModel):
     feedback_id: str
@@ -71,14 +79,27 @@ async def solve_math_problem(query: MathQuery):
         
         result = await math_router.solve_math_problem(
             question=query.question,
-            difficulty_level=query.difficulty_level
+            difficulty_level=query.difficulty_level,
+            topic=query.topic  # If added
         )
+        
+        if result.get("status") == "paused_for_review":
+            logger.info(f"Pausing for HITL: {result['feedback_id']}")
         
         return MathResponse(**result)
         
     except Exception as e:
         logger.error(f"Solve endpoint error: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    
+@app.post("/api/v1/resume", response_model=MathResponse)
+async def resume_hitl(request: ResumeRequest):
+    try:
+        result = await math_router.resume_with_input(request.feedback_id, request.human_input)
+        return MathResponse(**result)
+    except Exception as e:
+        logger.error(f"Resume error: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) 
 
 @app.post("/api/v1/feedback")
 async def submit_feedback(feedback: FeedbackRequest, background_tasks: BackgroundTasks):
